@@ -1,5 +1,13 @@
-from src.product.models import Product
+import shutil
+from pathlib import Path
+
+from fastapi import UploadFile
+
+from src.auth.access.service import need_role
+from src.product.models import Product, ProductPhotos
 from src.product.schemas import ProductCreate, ProductView, ProductUpdate
+from src.users.models import User
+from src.users.schemas import UserRole
 
 from src.utils.single_psql_db import get_db
 from src.utils.pagination import get_pagination_info
@@ -10,12 +18,11 @@ from sqlalchemy import select
 from uuid import UUID
 
 
-class ProductService:
+UPLOAD_DIR = Path("uploads/products")
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
-    @staticmethod
-    async def product_create(product: ProductCreate):
-        await Product.create(product)
-        return GeneralResponse(status=201, message="Ürün Başarıyla Oluşturuldu")
+
+class ProductService:
 
     @staticmethod
     async def get_products(pagination_data: PaginationGet):
@@ -51,23 +58,38 @@ class ProductService:
 
     @staticmethod
     async def get_product(product_id: UUID):
-        async with get_db() as db:
-            product = await Product.get(product_id)
-            if not product:
-                raise NotFoundError("Ürün Bulunamadı")
-            return GeneralResponse(status=200, message="Ürün Bulundu", details=ProductView.model_validate(product))
+        product = await Product.get(product_id)
+        if not product:
+            raise NotFoundError("Ürün Bulunamadı")
+        return GeneralResponse(status=200, message="Ürün Bulundu", details=ProductView.model_validate(product))
 
     @staticmethod
-    async def product_update(product_id: UUID, data: ProductUpdate):
-        async with get_db() as db:
-            product = await Product.get(product_id)
-            if not product:
-                raise NotFoundError("Ürün Bulunamadı")
-            await Product.update(id=product_id, product=data)
-            return GeneralResponse(status=200, message="Ürün Güncellendi")
+    async def product_create(product: ProductCreate, actor: User):
+        need_role(actor, [UserRole.ADMIN])
+        await Product.create(product)
+        return GeneralResponse(status=201, message="Ürün Başarıyla Oluşturuldu")
 
     @staticmethod
-    async def product_delete(product_id: UUID):
+    async def product_update(product_id: UUID, data: ProductUpdate, actor: User):
+        need_role(actor, [UserRole.ADMIN])
+        product = await Product.get(product_id)
+        if not product:
+            raise NotFoundError("Ürün Bulunamadı")
+        await Product.update(id=product_id, data=data)
+        return GeneralResponse(status=200, message="Ürün Güncellendi")
+
+    @staticmethod
+    async def product_delete(product_id: UUID, actor: User):
+        need_role(actor, [UserRole.ADMIN])
         await Product.delete(product_id)
         return GeneralResponse(status=200, message="Ürün Silindi")
+
+    @staticmethod
+    async def upload_photo(product_id: UUID, file: UploadFile):
+        file_path = UPLOAD_DIR / f"{product_id}_{file.filename}"
+        with file_path.open("wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        await ProductPhotos.create(product_id=product_id, url=str(file_path))
+        return GeneralResponse(message="Fotoğraf Yüklendi", status=200, details=str({"file_path": str(file_path)}))
+
 

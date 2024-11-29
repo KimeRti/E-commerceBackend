@@ -4,7 +4,7 @@ from uuid import UUID, uuid4
 from enum import Enum
 from sqlalchemy import Enum as SQLEnum
 
-from src.users.schemas import UserUpdate, UserCreate
+from src.users.schemas import UserUpdate, UserCreate, UserRole
 from src.utils.single_psql_db import Base, get_db
 from src.utils.exceptions import BadRequestError
 from asyncpg.exceptions import UniqueViolationError
@@ -22,6 +22,7 @@ class User(Base):
     phone: Mapped[str] = mapped_column(nullable=True, unique=True, index=True)
     country: Mapped[str] = mapped_column(nullable=False)
     identity_number: Mapped[str] = mapped_column(nullable=True, unique=True, index=True)
+    role: Mapped[str] = mapped_column(nullable=False, default=UserRole.CUSTOMER)
     avatar: Mapped[str] = mapped_column(nullable=True)
     password: Mapped[str] = mapped_column(nullable=False)
     is_active: Mapped[bool] = mapped_column(nullable=False, default=True)
@@ -87,6 +88,17 @@ class User(Base):
                 return user_instance
             except (UniqueViolationError, IntegrityError):
                 raise BadRequestError("Kullanıcı silinemedi. İletişime geçiniz.")
+
+    @classmethod
+    async def add_avatar(cls, user_id: UUID, avatar: str):
+        async with get_db() as db:
+            user_instance = await db.scalar(select(cls).where(cls.id == user_id))
+            if user_instance is None:
+                raise BadRequestError("Kullanıcı bulunamadı.")
+            user_instance.avatar = avatar
+            await db.commit()
+            await db.refresh(user_instance)
+            return user_instance
 
 
 

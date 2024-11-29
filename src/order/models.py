@@ -4,6 +4,7 @@ from sqlalchemy import ForeignKey, select
 from uuid import UUID, uuid4
 from src.utils.single_psql_db import Base
 
+
 class Order(Base):
     __tablename__ = "orders"
 

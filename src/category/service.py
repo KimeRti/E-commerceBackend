@@ -1,6 +1,9 @@
+from src.auth.access.service import need_role
 from src.category.models import Category
 from src.category.schemas import CategoryCreate, CategoryView
 from src.product.models import Product
+from src.users.models import User
+from src.users.schemas import UserRole
 
 from src.utils.single_psql_db import get_db
 from src.utils.pagination import get_pagination_info
@@ -14,7 +17,8 @@ from uuid import UUID
 
 class CategoryService:
     @staticmethod
-    async def create(category: CategoryCreate):
+    async def create(category: CategoryCreate, actor: User):
+        need_role(actor, [UserRole.ADMIN])
         await Category.create(category)
         return GeneralResponse(status=201, message="Kategori Başarıyla Oluşturuldu")
 
@@ -59,7 +63,8 @@ class CategoryService:
             return GeneralResponse(status=200, message="Kategori Bulundu", details=CategoryView.model_validate(category))
 
     @staticmethod
-    async def update(category_id: UUID, data: CategoryCreate):
+    async def update(category_id: UUID, data: CategoryCreate, actor: User):
+        need_role(actor, [UserRole.ADMIN])
         async with get_db() as db:
             category = await Category.get(category_id)
             if not category:
@@ -68,7 +73,8 @@ class CategoryService:
             return GeneralResponse(status=200, message="Kategori Güncellendi")
 
     @staticmethod
-    async def delete(category_id: UUID):
+    async def delete(category_id: UUID, actor: User):
+        need_role(actor, [UserRole.ADMIN])
         async with get_db() as db:
             stmt = select(Category).where(Category.id == category_id)
             category = await db.scalar(stmt)

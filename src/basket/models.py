@@ -3,6 +3,7 @@ from sqlalchemy import ForeignKey, Column
 from uuid import UUID, uuid4
 from src.utils.single_psql_db import Base
 
+
 class Basket(Base):
     __tablename__ = "baskets"
 
@@ -11,6 +12,7 @@ class Basket(Base):
     total_amount: Mapped[float] = mapped_column(nullable=False)
 
     basket_items: Mapped[list["BasketItem"]] = relationship("BasketItem", back_populates="basket")
+
 
 class BasketItem(Base):
     __tablename__ = "basket_items"
@@ -21,7 +23,6 @@ class BasketItem(Base):
     quantity: Mapped[int] = mapped_column(nullable=False)
     price: Mapped[float] = mapped_column(nullable=False)
 
-    # Lazy import of Order to avoid circular reference
     basket: Mapped["Basket"] = relationship("Basket", back_populates="basket_items")
 
     order_id = Column(ForeignKey("orders.id"), nullable=True)

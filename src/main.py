@@ -1,6 +1,9 @@
+from pathlib import Path
+
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from src.basket.router import basket
 from src.utils.single_psql_db import init_psql_db
@@ -17,9 +20,9 @@ app = FastAPI(
     title="Dorumo Motors API",
     description="Dorumonun Anas... neyse",
     version="1.0.0",
-    docs_url="/docs",  # Swagger UI URL'si
-    redoc_url="/redoc",  # ReDoc URL'si (İsteğe Bağlı)
-    openapi_url="/openapi.json"  # OpenAPI şeması URL'si
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json"
 )
 
 # Include routers
@@ -32,7 +35,7 @@ app.include_router(orders)
 
 
 # CORS Middleware
-origins = ["http://localhost:3000"]
+origins = ["http://localhost:3000", "http://localhost:5173"]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -41,6 +44,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+UPLOAD_DIR = Path("uploads")
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 @app.on_event("startup")
 async def startup():

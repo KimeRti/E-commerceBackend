@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from pydantic import BaseModel, EmailStr, SecretStr, field_validator
-from typing import Optional
+from typing import Optional, Union
 import bcrypt
 
 from src.utils.schemas import UUIDView
@@ -71,6 +71,14 @@ class ProductUpdate(BaseModel):
     class Config:
         orm_mode = True
         arbitrary_types_allowed = True
+        from_attributes = True
+
+
+class PhotoResponse(BaseModel):
+    id: Union[UUID, str]
+    url: str
+
+    class Config:
         from_attributes = True
 
 

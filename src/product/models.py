@@ -70,6 +70,43 @@ class Product(Base):
             return product
 
 
+class ProductPhotos(Base):
+    __tablename__ = "product_photos"
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    product_id: Mapped[UUID] = mapped_column(ForeignKey("products.id"), nullable=False)
+    url: Mapped[str] = mapped_column(nullable=False)
+
+    @classmethod
+    async def create(cls, product_id: UUID, url: str):
+        async with get_db() as db:
+            new_photo = ProductPhotos(product_id=product_id, url=url)
+            db.add(new_photo)
+            await db.commit()
+            await db.refresh(new_photo)
+            return new_photo
+
+    @classmethod
+    async def get(cls, photo_id: UUID):
+        async with get_db() as db:
+            stmt = select(cls).where(cls.id == photo_id)
+            photo = await db.scalar(stmt)
+            return photo
+
+    @classmethod
+    async def get_by_product(cls, product_id: UUID):
+        async with get_db() as db:
+            stmt = select(cls).where(cls.product_id == product_id)
+            photos = await db.execute(stmt)
+            return photos
+
+    @classmethod
+    async def delete(cls, photo_id: UUID):
+        async with get_db() as db:
+            stmt = select(cls).where(cls.id == photo_id)
+            photo = await db.scalar(stmt)
+            await db.delete(photo)
+            await db.commit()
+            return photo
 
 
 

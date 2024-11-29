@@ -2,7 +2,7 @@ from enum import Enum
 from uuid import UUID
 
 from pydantic import BaseModel, EmailStr, SecretStr, field_validator
-from typing import Optional
+from typing import Optional, Union
 import bcrypt
 
 from src.utils.schemas import UUIDView
@@ -15,10 +15,10 @@ class UserPassHashMixin:
             return bcrypt.hashpw(v.get_secret_value().encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
         return v
 
-#@TODO: Add UserRoles
-#class UserRoles(str, Enum):
-#    CUSTOMER = "CUSTOMER"
-#    ADMIN = "ADMIN"
+
+class UserRole(str, Enum):
+    CUSTOMER = "CUSTOMER"
+    ADMIN = "ADMIN"
 
 
 class UserCreate(BaseModel, UserPassHashMixin):
@@ -77,3 +77,10 @@ class UserMeUpdate(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     avatar: Optional[str] = None
+
+
+class PhotoResponse(BaseModel):
+    url: str
+
+    class Config:
+        from_attributes = True

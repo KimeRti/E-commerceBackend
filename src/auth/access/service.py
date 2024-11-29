@@ -1,8 +1,7 @@
-# sonradan değişecek
-# from src.users.user.models import User
-# from src.users.user.schemas import UserRole
 from typing import List, Optional
 
+from src.users.models import User
+from src.users.schemas import UserRole
 from src.utils.exceptions import AccessError
 
 
@@ -20,7 +19,7 @@ def need_role(actor: "User", role: List["UserRole"], message: Optional[str] = No
     if actor.role not in role:
         if message:
             raise AccessError(message)
-        raise AccessError("Bu içerik için abone olmalısınız.")
+        raise AccessError("Buna Yetkin Yok.")
     return None
 
 

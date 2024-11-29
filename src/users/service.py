@@ -1,3 +1,9 @@
+import shutil
+from pathlib import Path
+from sqlalchemy import select
+from uuid import UUID
+from fastapi import UploadFile
+
 from src.users.schemas import UserCreate, UserUpdate, UserView, UserMiniView
 from src.users.models import User
 
@@ -7,8 +13,8 @@ from src.utils.exceptions import NotFoundError
 from src.utils.schemas import GeneralResponse, PaginationGet, ListView
 
 
-from sqlalchemy import select
-from uuid import UUID
+UPLOAD_DIR = Path("uploads/avatars")
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 
 class UserService:
@@ -72,5 +78,13 @@ class UserService:
                 raise NotFoundError("User not found.")
             await user.delete()
             return GeneralResponse(status=200, message="User deleted successfully.")
+
+    @staticmethod
+    async def upload_avatar(user_id: UUID, file: UploadFile):
+        file_path = UPLOAD_DIR / f"{user_id}_{file.filename}"
+        with file_path.open("wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        await User.add_avatar(user_id=user_id, avatar=str(file_path))
+        return GeneralResponse(message="Fotoğraf Yüklendi", status=200, details=str({"file_path": str(file_path)}))
 
 
