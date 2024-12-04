@@ -34,8 +34,7 @@ app.include_router(basket)
 app.include_router(orders)
 
 
-# CORS Middleware
-origins = ["http://localhost:3000", "http://localhost:5173"]
+origins = ["http://localhost:3000"]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,

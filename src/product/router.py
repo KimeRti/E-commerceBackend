@@ -23,7 +23,7 @@ product = APIRouter(
 )
 
 
-@product.post("/create")
+@product.post("")
 async def create_product(product: ProductCreate, current_user: User = Depends(get_current_user)):
     resp = await ProductService.product_create(product=product, actor=current_user)
     return JSONResponse(status_code=resp.status, content=resp.model_dump())

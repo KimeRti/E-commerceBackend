@@ -45,7 +45,10 @@ async def logout():
 
 @auth.get("/me")
 async def me(current_user: User = Depends(get_current_user)):
-    return JSONResponse(status_code=200, content=UserMeView.model_validate(current_user).model_dump())
+    return JSONResponse(
+        status_code=200,
+        content=UserMeView.model_validate(current_user).model_dump()
+    )
 
 
 @auth.post("/forgot-password")
