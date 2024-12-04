@@ -54,6 +54,8 @@ class UserView(BaseModel, UUIDView):
 class UserMeView(BaseModel, UUIDView):
     email: EmailStr
     username: str
+    first_name: str
+    last_name: str
     phone: str
     is_active: bool
     avatar: Optional[str] = None

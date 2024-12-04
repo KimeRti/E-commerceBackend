@@ -4,7 +4,8 @@ from sqlalchemy import select
 from uuid import UUID
 from fastapi import UploadFile
 
-from src.users.schemas import UserCreate, UserUpdate, UserView, UserMiniView
+from src.auth.access.service import need_role
+from src.users.schemas import UserCreate, UserUpdate, UserView, UserMiniView, UserRole
 from src.users.models import User
 
 from src.utils.single_psql_db import get_db
@@ -20,7 +21,8 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 class UserService:
 
     @staticmethod
-    async def create(user: UserCreate):
+    async def create(user: UserCreate, actor: User):
+        need_role(actor, [UserRole.ADMIN])
         await User.create(user)
         return GeneralResponse(status=201, message="User created successfully.")
 
@@ -62,7 +64,8 @@ class UserService:
             return GeneralResponse(status=200, message="User found.", details=UserView.model_validate(user))
 
     @staticmethod
-    async def update(user_id: UUID, data: UserUpdate):
+    async def update(user_id: UUID, data: UserUpdate, actor: User):
+        need_role(actor, [UserRole.ADMIN])
         async with get_db() as db:
             user = await User.get(user_id)
             if not user:

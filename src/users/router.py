@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import select
 
+from src.auth.current_user import get_current_user
 from src.users.models import User
 from src.users.schemas import UserCreate, PhotoResponse
 from src.users.service import UserService
@@ -20,9 +21,9 @@ user = APIRouter(
 )
 
 
-@user.post("/user/create")
-async def create_user(user: UserCreate):
-    resp = await UserService.create(user=user)
+@user.post("")
+async def create_user(user: UserCreate, current_user: User = Depends(get_current_user)):
+    resp = await UserService.create(user=user, actor=current_user)
     return JSONResponse(status_code=resp.status, content=resp.model_dump())
 
 
