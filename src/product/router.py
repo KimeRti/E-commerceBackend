@@ -30,8 +30,8 @@ async def create_product(product: ProductCreate, current_user: User = Depends(ge
 
 
 @product.get("")
-async def get_products(data: PaginationGet = Depends()):
-    content = await ProductService.get_products(pagination_data=data)
+async def get_products(pagination: PaginationGet = Depends()):
+    content = await ProductService.get_products(pagination)
     return JSONResponse(status_code=content.status, content=content.model_dump())
 
 

@@ -15,18 +15,9 @@ from jose import jwt
 import bcrypt
 
 
-# from passlib.context import CryptContext
-# from passlib import pwd
-
-# pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-# def hash_password(password):  # no need i did in schema field validator
-#     return pwd_context.hash(password)
-
 def verify_password(plain_password, hashed_password):
     password_byte_enc = plain_password.encode('utf-8')
     return bcrypt.checkpw(password=password_byte_enc, hashed_password=hashed_password.encode('utf-8'))
-    # return pwd_context.verify(plain_password, hashed_password)
 
 
 class AuthService:

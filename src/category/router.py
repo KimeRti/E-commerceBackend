@@ -16,7 +16,7 @@ category = APIRouter(
 )
 
 
-@category.post("/create-category")
+@category.post("")
 async def create_category(category: CategoryCreate, current_user: User = Depends(get_current_user)):
     resp = await CategoryService.create(category=category, actor=current_user)
     return JSONResponse(status_code=resp.status, content=resp.model_dump())

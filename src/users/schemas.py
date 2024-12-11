@@ -26,9 +26,6 @@ class UserCreate(BaseModel, UserPassHashMixin):
     first_name: str
     last_name: str
     email: EmailStr
-    phone: str
-    country: str
-    identity_number: str
     password: SecretStr
 
 
@@ -36,19 +33,22 @@ class UserUpdate(BaseModel, UserPassHashMixin):
     email: Optional[EmailStr] = None
     username: Optional[str] = None
     password: Optional[SecretStr] = None
-    avatar: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    role: Optional[UserRole] = None
     is_active: Optional[bool] = None
 
 
 class UserView(BaseModel, UUIDView):
     email: EmailStr
+    first_name: str
+    last_name: str
     username: str
     is_active: bool
-    phone: str
-    avatar: Optional[str] = None
+    role: UserRole
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 
 class UserMeView(BaseModel, UUIDView):
@@ -56,9 +56,7 @@ class UserMeView(BaseModel, UUIDView):
     username: str
     first_name: str
     last_name: str
-    phone: str
     is_active: bool
-    avatar: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -68,7 +66,6 @@ class UserMiniView(BaseModel, UUIDView):
     id: UUID
     username: str
     email: EmailStr
-    avatar: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -78,11 +75,151 @@ class UserMeUpdate(BaseModel):
     username: Optional[str] = None
     first_name: Optional[str] = None
     last_name: Optional[str] = None
-    avatar: Optional[str] = None
 
 
-class PhotoResponse(BaseModel):
-    url: str
+class AddressCreate(BaseModel):
+    name: str
+    title: str
+    country: str
+    city: str
+    district: str
+    zip_code: str
+    phone: str
+    identity_number: str
+    address: str
+
+    @field_validator("identity_number")
+    def identity_number_validator(cls, v):
+        if len(str(v)) != 11:
+            raise ValueError("T.C Kimlik Numarası 11 karakter olmalıdır !")
+        return v
+
+    @field_validator("phone")
+    def phone_validator(cls, v):
+        if len(str(v)) != 11:
+            raise ValueError("Telefon Numarası 11 karakter olmalıdır !")
+        return v
+
+    @field_validator("zip_code")
+    def post_code_validator(cls, v):
+        if len(str(v)) != 5:
+            raise ValueError("Posta Kodu 5 karakter olmalıdır !")
+        return v
+
+    @field_validator("country")
+    def country_validator(cls, v):
+        if len(v) < 2:
+            raise ValueError("Ülke Adı en az 2 karakter olmalıdır !")
+        return v
+
+    @field_validator("city")
+    def city_validator(cls, v):
+        if len(v) < 2:
+            raise ValueError("Şehir Adı en az 2 karakter olmalıdır !")
+        return v
+
+    @field_validator("district")
+    def district_validator(cls, v):
+        if len(v) < 2:
+            raise ValueError("İlçe Adı en az 2 karakter olmalıdır !")
+        return v
+
+    @field_validator("address")
+    def address_validator(cls, v):
+        if len(v) < 10:
+            raise ValueError("Adres en az 10 karakter olmalıdır !")
+        return v
+
+    @field_validator("title")
+    def title_validator(cls, v):
+        if len(v) < 2:
+            raise ValueError("Başlık en az 2 karakter olmalıdır !")
+        return v
+
+    @field_validator("name")
+    def name_validator(cls, v):
+        if len(v) < 2:
+            raise ValueError("Ad Soyad en az 2 karakter olmalıdır !")
+        return v
+
+
+class AddressUpdate(BaseModel):
+    name: Optional[str] = None
+    title: Optional[str] = None
+    country: Optional[str] = None
+    city: Optional[str] = None
+    district: Optional[str] = None
+    zip_code: Optional[str] = None
+    phone: Optional[str] = None
+    identity_number: Optional[str] = None
+    address: Optional[str] = None
+
+    @field_validator("identity_number")
+    def identity_number_validator(cls, v):
+        if len(str(v)) != 11:
+            raise ValueError("T.C Kimlik Numarası 11 karakter olmalıdır !")
+        return v
+
+    @field_validator("phone")
+    def phone_validator(cls, v):
+        if len(str(v)) != 11:
+            raise ValueError("Telefon Numarası 11 karakter olmalıdır !")
+        return v
+
+    @field_validator("zip_code")
+    def post_code_validator(cls, v):
+        if len(str(v)) != 5:
+            raise ValueError("Posta Kodu 5 karakter olmalıdır !")
+        return v
+
+    @field_validator("country")
+    def country_validator(cls, v):
+        if len(v) < 2:
+            raise ValueError("Ülke Adı en az 2 karakter olmalıdır !")
+        return v
+
+    @field_validator("city")
+    def city_validator(cls, v):
+        if len(v) < 2:
+            raise ValueError("Şehir Adı en az 2 karakter olmalıdır !")
+        return v
+
+    @field_validator("district")
+    def district_validator(cls, v):
+        if len(v) < 2:
+            raise ValueError("İlçe Adı en az 2 karakter olmalıdır !")
+        return v
+
+    @field_validator("address")
+    def address_validator(cls, v):
+        if len(v) < 10:
+            raise ValueError("Adres en az 10 karakter olmalıdır !")
+        return v
+
+    @field_validator("title")
+    def title_validator(cls, v):
+        if len(v) < 2:
+            raise ValueError("Başlık en az 2 karakter olmalıdır !")
+        return v
+
+    @field_validator("name")
+    def name_validator(cls, v):
+        if len(v) < 2:
+            raise ValueError("Ad Soyad en az 2 karakter olmalıdır !")
+
+
+class AddressView(BaseModel, UUIDView):
+    name: str
+    title: str
+    country: str
+    city: str
+    district: str
+    zip_code: str
+    phone: str
+    identity_number: str
+    address: str
 
     class Config:
         from_attributes = True
+
+

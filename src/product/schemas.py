@@ -50,8 +50,8 @@ class ProductMiniView(BaseModel, UUIDView):
 
 class ProductView(BaseModel, UUIDView):
     title: str
-    description: str
     price: float
+    category_id: Union[UUID, str]
     stock: int
     is_active: bool
 
@@ -64,6 +64,7 @@ class ProductView(BaseModel, UUIDView):
 class ProductUpdate(BaseModel):
     title: Optional[str]
     description: Optional[str]
+    category_id: Optional[UUID]
     price: Optional[float]
     stock: Optional[int]
     is_active: Optional[bool]

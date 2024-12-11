@@ -1,18 +1,15 @@
-from pathlib import Path
+from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, UploadFile
+from fastapi import APIRouter, Depends, Request, Header
 from fastapi.responses import JSONResponse
-from fastapi.staticfiles import StaticFiles
-from sqlalchemy import select
 
 from src.auth.current_user import get_current_user
 from src.users.models import User
-from src.users.schemas import UserCreate, PhotoResponse
+from src.users.schemas import UserCreate, UserUpdate, AddressCreate
 from src.users.service import UserService
+from src.utils.exceptions import BadRequestError
 from src.utils.schemas import PaginationGet
-from src.utils.single_psql_db import get_db
-from src.settings import config
 
 user = APIRouter(
     prefix="/users",
@@ -24,6 +21,35 @@ user = APIRouter(
 @user.post("")
 async def create_user(user: UserCreate, current_user: User = Depends(get_current_user)):
     resp = await UserService.create(user=user, actor=current_user)
+    return JSONResponse(status_code=resp.status, content=resp.model_dump())
+
+
+@user.post("/address")
+async def create_address(request: Request, address: AddressCreate, current_user: Optional[User] = Depends(get_current_user), session_token: Optional[str] = Header(None)):
+    if current_user is None:
+        try:
+            current_user = await get_current_user(request=request)
+        except Exception:
+            current_user = None
+
+    if not current_user and not session_token:
+        raise BadRequestError("Kullanıcı bilgisi bulunamadı !")
+
+    resp = await UserService.create_address(address=address, actor=current_user, session_token=session_token)
+    return JSONResponse(status_code=resp.status, content=resp.model_dump())
+
+@user.get("/addresses")
+async def get_addresses(request: Request, current_user: Optional[User] = Depends(get_current_user), session_token: Optional[str] = Header(None)):
+    if current_user is None:
+        try:
+            current_user = await get_current_user(request=request)
+        except Exception:
+            current_user = None
+
+    if not current_user and not session_token:
+        raise BadRequestError("Kullanıcı bilgisi bulunamadı !")
+
+    resp = await UserService.get_address(actor=current_user, session_token=session_token)
     return JSONResponse(status_code=resp.status, content=resp.model_dump())
 
 
@@ -39,15 +65,13 @@ async def get_user(user_id: UUID):
     return JSONResponse(status_code=content.status, content=content.model_dump())
 
 
-@user.post("/upload")
-async def upload_avatar(user_id: UUID, file: UploadFile):
-    resp = await UserService.upload_avatar(user_id=user_id, file=file)
+@user.put("/{user_id}")
+async def update_user(user_id: UUID, data: UserUpdate, current_user: User = Depends(get_current_user)):
+    resp = await UserService.update(user_id=user_id, data=data, actor=current_user)
     return JSONResponse(status_code=resp.status, content=resp.model_dump())
 
 
-@user.get("/{user_id}/avatar", response_model=PhotoResponse)
-async def get_avatar(user_id: UUID):
-    user = await User.get(user_id)
-    return PhotoResponse(
-        url=f"{config.BASE_URL}/uploads/avatars/{Path(user.avatar).name}"
-    )
+@user.delete("/{user_id}")
+async def delete_user(user_id: UUID, current_user: User = Depends(get_current_user)):
+    resp = await UserService.delete(user_id=user_id, actor=current_user)
+    return JSONResponse(status_code=resp.status, content=resp.model_dump())

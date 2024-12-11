@@ -25,7 +25,7 @@ async def get_current_user(
             token = authorization
 
     if token is None:
-        raise AuthError("Token yok.")
+        return None
 
     try:
         payload = jwt.decode(token, config.JWT_SECRET_KEY, algorithms=[config.JWT_ALGORITHM])
@@ -40,7 +40,7 @@ async def get_current_user(
 
         user = await User.by_email(email)
         if user is None:
-            raise AuthError("Kullanıcı bulunamadı.")
+            return None
 
         if user.is_active is False:
             raise AuthError("Kullanıcı aktif değil.")
@@ -48,4 +48,4 @@ async def get_current_user(
         return user
 
     except (JWTError, ValidationError):
-        raise AuthError("Geçersiz token.")
+        return None

@@ -16,9 +16,6 @@ class RegisterSchema(BaseModel):
     first_name: str = Field(..., min_length=3, max_length=50)
     last_name: str = Field(..., min_length=3, max_length=50)
     email: EmailStr = Field(..., min_length=3, max_length=50)
-    phone: str = Field(..., min_length=10, max_length=15)
-    identity_number: str = Field(..., min_length=11, max_length=11)
-    country: str = Field(..., min_length=3, max_length=50)
     password: SecretStr
 
     # password_repeat: SecretStr

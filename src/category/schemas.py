@@ -20,6 +20,7 @@ class CategoryCreate(BaseModel):
 class CategoryView(BaseModel, UUIDView):
     id: UUID
     name: str
+    description: str
 
     class Config:
         orm_mode = True

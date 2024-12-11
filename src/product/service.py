@@ -43,18 +43,32 @@ class ProductService:
             if pagination_data.order:
                 query = query.order_by(Product.updated_at.desc())
 
-            products = await db.scalars(query)
-            products = products.all()
+            products = await db.execute(query)
+            products = products.scalars().all()
+
+            product_views = []
+            for product in products:
+                product_dict = {
+                    "id": str(product.id),
+                    "title": product.title,
+                    "description": product.description,
+                    "category_id": str(product.category_id),
+                    "price": product.price,
+                    "stock": product.stock,
+                    "is_active": product.is_active,
+                    "created_at": int(product.created_at.timestamp() * 1000),
+                    "updated_at": int(product.updated_at.timestamp() * 1000)
+                }
+                product_views.append(product_dict)
 
             count = await Product.get_count(where_query)
-            pagination_info = get_pagination_info(total_items=count, current_page=pagination_data.page,
-                                                  page_size=pagination_data.pageSize)
-
-            return GeneralResponse(
-                status=200,
-                message="Ürünler Listelendi.",
-                details=ListView[ProductView](info=pagination_info, items=products)
+            pagination_info = get_pagination_info(
+                total_items=count,
+                current_page=pagination_data.page,
+                page_size=pagination_data.pageSize
             )
+
+            return GeneralResponse(status=200,message="Ürünler Listelendi",details=ListView[ProductView](items=product_views, info=pagination_info))
 
     @staticmethod
     async def get_product(product_id: UUID):

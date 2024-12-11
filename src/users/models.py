@@ -1,12 +1,12 @@
-from sqlalchemy.orm import Mapped, mapped_column, relationship, selectinload
-from sqlalchemy import ForeignKey, Enum as SqlEnum, Column, select
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import ForeignKey, select
 from uuid import UUID, uuid4
-from enum import Enum
-from sqlalchemy import Enum as SQLEnum
 
-from src.users.schemas import UserUpdate, UserCreate, UserRole
+from src.cart.models import Cart
+from src.order.models import Order
 from src.utils.single_psql_db import Base, get_db
 from src.utils.exceptions import BadRequestError
+from src.users.schemas import UserCreate, UserUpdate, AddressCreate
 from asyncpg.exceptions import UniqueViolationError
 from sqlalchemy.exc import IntegrityError
 
@@ -19,41 +19,32 @@ class User(Base):
     first_name: Mapped[str] = mapped_column(nullable=False)
     last_name: Mapped[str] = mapped_column(nullable=False)
     email: Mapped[str] = mapped_column(nullable=False, unique=True, index=True)
-    phone: Mapped[str] = mapped_column(nullable=True, unique=True, index=True)
-    country: Mapped[str] = mapped_column(nullable=False)
-    identity_number: Mapped[str] = mapped_column(nullable=True, unique=True, index=True)
-    role: Mapped[str] = mapped_column(nullable=False, default=UserRole.CUSTOMER)
-    avatar: Mapped[str] = mapped_column(nullable=True)
+    role: Mapped[str] = mapped_column(nullable=False, default="CUSTOMER")
     password: Mapped[str] = mapped_column(nullable=False)
     is_active: Mapped[bool] = mapped_column(nullable=False, default=True)
-    is_superuser: Mapped[bool] = mapped_column(nullable=False, default=False)
 
-    class Config:
-        arbitrary_types_allowed = True
+    orders: Mapped[list["Order"]] = relationship("Order", back_populates="user")
+    cart: Mapped[list["Cart"]] = relationship("Cart", back_populates="user")
+    addresses: Mapped[list["Address"]] = relationship("Address", back_populates="user")
 
     @classmethod
     async def by_email(cls, email: str):
         async with get_db() as db:
-            from sqlalchemy import select
             stmt = select(cls).where(cls.email == email)
-            user = await db.scalar(stmt)
-            return user
+            return await db.scalar(stmt)
 
     @classmethod
     async def get(cls, user_id: UUID):
         async with get_db() as db:
             stmt = select(cls).where(cls.id == user_id)
-            user = await db.scalar(stmt)
-            return user
+            return await db.scalar(stmt)
 
     @classmethod
     async def create(cls, user: UserCreate):
         async with get_db() as db:
-            existing_user = await db.execute(
-                select(User).where(User.email == user.email)
+            existing_user = await db.scalar(
+                select(cls).where(cls.email == user.email)
             )
-            existing_user = existing_user.scalars().first()
-
             if existing_user:
                 raise BadRequestError("Bu e-posta adresi zaten kullanımda.")
 
@@ -68,10 +59,14 @@ class User(Base):
         async with get_db() as db:
             stmt = select(cls).where(cls.id == user_id)
             user_instance = await db.scalar(stmt)
+
             if user_instance is None:
                 raise BadRequestError("Kullanıcı bulunamadı.")
-            for key, value in user.dict().items():
+
+            update_data = user.model_dump(exclude_unset=True)
+            for key, value in update_data.items():
                 setattr(user_instance, key, value)
+
             await db.commit()
             await db.refresh(user_instance)
             return user_instance
@@ -89,17 +84,30 @@ class User(Base):
             except (UniqueViolationError, IntegrityError):
                 raise BadRequestError("Kullanıcı silinemedi. İletişime geçiniz.")
 
+
+class Address(Base):
+    __tablename__ = "addresses"
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), nullable=True)
+    session_token: Mapped[str] = mapped_column(nullable=True)
+    name: Mapped[str] = mapped_column(nullable=False)
+    title: Mapped[str] = mapped_column(nullable=False)
+    country: Mapped[str] = mapped_column(nullable=False)
+    city: Mapped[str] = mapped_column(nullable=False)
+    district: Mapped[str] = mapped_column(nullable=False)
+    phone: Mapped[str] = mapped_column(nullable=False)
+    identity_number: Mapped[str] = mapped_column(nullable=False)
+    address: Mapped[str] = mapped_column(nullable=False)
+    zip_code: Mapped[str] = mapped_column(nullable=False)
+
+    user: Mapped["User"] = relationship("User", back_populates="addresses")
+
     @classmethod
-    async def add_avatar(cls, user_id: UUID, avatar: str):
+    async def create(cls, address_data: dict):
         async with get_db() as db:
-            user_instance = await db.scalar(select(cls).where(cls.id == user_id))
-            if user_instance is None:
-                raise BadRequestError("Kullanıcı bulunamadı.")
-            user_instance.avatar = avatar
+            instance = cls(**address_data)
+            db.add(instance)
             await db.commit()
-            await db.refresh(user_instance)
-            return user_instance
-
-
-
-
+            await db.refresh(instance)
+            return instance

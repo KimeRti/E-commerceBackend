@@ -51,4 +51,9 @@ class Category(Base):
             await db.delete(instance)
             await db.commit()
 
+    @classmethod
+    async def get(cls, category_id: UUID):
+        async with get_db() as db:
+            stmt = select(cls).where(cls.id == category_id)
+            return await db.scalar(stmt)
 
