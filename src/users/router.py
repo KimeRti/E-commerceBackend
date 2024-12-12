@@ -38,6 +38,7 @@ async def create_address(request: Request, address: AddressCreate, current_user:
     resp = await UserService.create_address(address=address, actor=current_user, session_token=session_token)
     return JSONResponse(status_code=resp.status, content=resp.model_dump())
 
+
 @user.get("/addresses")
 async def get_addresses(request: Request, current_user: Optional[User] = Depends(get_current_user), session_token: Optional[str] = Header(None)):
     if current_user is None:
