@@ -6,7 +6,7 @@ from src.cart.models import Cart
 from src.order.models import Order
 from src.utils.single_psql_db import Base, get_db
 from src.utils.exceptions import BadRequestError
-from src.users.schemas import UserCreate, UserUpdate, AddressCreate
+from src.users.schemas import UserCreate, UserUpdate, AddressCreate, UserRole
 from asyncpg.exceptions import UniqueViolationError
 from sqlalchemy.exc import IntegrityError
 
@@ -19,7 +19,7 @@ class User(Base):
     first_name: Mapped[str] = mapped_column(nullable=False)
     last_name: Mapped[str] = mapped_column(nullable=False)
     email: Mapped[str] = mapped_column(nullable=False, unique=True, index=True)
-    role: Mapped[str] = mapped_column(nullable=False, default="CUSTOMER")
+    role: Mapped[UserRole] = mapped_column(nullable=False, default=UserRole.CUSTOMER)
     password: Mapped[str] = mapped_column(nullable=False)
     is_active: Mapped[bool] = mapped_column(nullable=False, default=True)
 
@@ -102,6 +102,7 @@ class Address(Base):
     zip_code: Mapped[str] = mapped_column(nullable=False)
 
     user: Mapped["User"] = relationship("User", back_populates="addresses")
+    orders: Mapped[list["Order"]] = relationship("Order", back_populates="address")
 
     @classmethod
     async def create(cls, address_data: dict):

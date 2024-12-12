@@ -111,7 +111,6 @@ class UserService:
         else:
             raise BadRequestError("Bir actor veya session_token sağlanmalı.")
 
-        # Veritabanına kaydediyoruz
         created_address = await Address.create(address_data)
 
         return GeneralResponse(
@@ -145,6 +144,19 @@ class UserService:
             message="Adres başarıyla getirildi.",
             details=AddressView.from_orm(address)
         )
+
+    @staticmethod
+    async def get_address_by_id(id: UUID):
+        async with get_db() as db:
+            instance = await db.execute(select(Address).filter(Address.id == id))
+            instance = instance.scalar()
+            if not instance:
+                raise NotFoundError("Adres bulunamadı.")
+            return GeneralResponse(
+                status=200,
+                message="Adres başarıyla getirildi.",
+                details=AddressView.from_orm(instance)
+            )
 
 
 

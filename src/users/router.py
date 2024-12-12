@@ -54,6 +54,12 @@ async def get_addresses(request: Request, current_user: Optional[User] = Depends
     return JSONResponse(status_code=resp.status, content=resp.model_dump())
 
 
+@user.get("/addresses/{address_id}")
+async def get_address(address_id: UUID):
+    resp = await UserService.get_address_by_id(address_id)
+    return JSONResponse(status_code=resp.status, content=resp.model_dump())
+
+
 @user.get("")
 async def get_users(data: PaginationGet = Depends()):
     content = await UserService.get_users(pagination_data=data)

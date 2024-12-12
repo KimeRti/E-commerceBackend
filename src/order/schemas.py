@@ -1,9 +1,12 @@
+from decimal import Decimal
+
 from pydantic import BaseModel
 from uuid import UUID
 from enum import Enum
 from typing import List, Optional, Union
 from datetime import datetime
 
+from src.cart.schemas import CartItemView
 from src.utils.schemas import UUIDView
 
 
@@ -16,23 +19,23 @@ class OrderStatus(str, Enum):
 
 
 class OrderCreate(BaseModel):
-    user_id: Union[UUID, str]
-    order_number: str
-    address: str
-    total_amount: float
-    status: OrderStatus
+    address: UUID
+    items: list[UUID]
+    total_amount: Decimal
+    status: OrderStatus.PENDING
 
     class Config:
         from_attributes = True
 
 
 class OrderView(BaseModel, UUIDView):
-    user_id: Union[UUID, str]
+    user_id: Optional[Union[UUID, str]] = None
+    session_token: Optional[str] = None
     order_number: str
     address: str
     total_amount: float
     status: OrderStatus
-    items: List[Union[UUID, str]]
+    items: List[CartItemView]
 
     class Config:
         from_attributes = True

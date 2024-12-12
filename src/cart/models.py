@@ -13,7 +13,6 @@ class Cart(Base):
     session_token: Mapped[str] = mapped_column(unique=True, nullable=True)
 
     items: Mapped[list["CartItem"]] = relationship("CartItem", back_populates="cart", cascade="all, delete-orphan")
-
     user: Mapped["User"] = relationship("User", back_populates="cart")
 
 
@@ -21,11 +20,9 @@ class CartItem(Base):
     __tablename__ = "cart_item"
 
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
-    cart_id: Mapped[UUID] = mapped_column(ForeignKey("cart.id"), nullable=False)
+    cart_id: Mapped[UUID] = mapped_column(ForeignKey("cart.id"), nullable=True)
     product_id: Mapped[UUID] = mapped_column(ForeignKey("products.id"), nullable=False)
     quantity: Mapped[int] = mapped_column(nullable=False)
 
-    order_id: Mapped[UUID] = mapped_column(ForeignKey("order.id"), nullable=True)  # Siparişle ilişki
-
-    cart: Mapped["Cart"] = relationship("Cart", back_populates="items")  # Cart ile ilişki
-    order: Mapped["Order"] = relationship("Order", back_populates="items")  # Order ile ilişki (sipariş oluşturulduğunda)
+    cart: Mapped["Cart"] = relationship("Cart", back_populates="items")
+    product: Mapped["Product"] = relationship("Product")
