@@ -42,11 +42,17 @@ class User(Base):
     @classmethod
     async def create(cls, user: UserCreate):
         async with get_db() as db:
-            existing_user = await db.scalar(
+            existing_email = await db.scalar(
                 select(cls).where(cls.email == user.email)
             )
-            if existing_user:
+            if existing_email:
                 raise BadRequestError("Bu e-posta adresi zaten kullanımda.")
+
+            existing_username = await db.scalar(
+                select(cls).where(cls.username == user.username)
+            )
+            if existing_username:
+                raise BadRequestError("Bu kullanıcı adı zaten kullanımda.")
 
             new_user = User(**user.model_dump(exclude_none=True))
             db.add(new_user)

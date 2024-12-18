@@ -47,6 +47,7 @@ class MongoOrder(BaseModel):
     session_token: Optional[str] = None
     created_at: datetime
     updated_at: datetime
+    cancel_reason: Optional[str] = None
 
     class Config:
         json_encoders = {

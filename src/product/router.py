@@ -66,6 +66,6 @@ async def get_room_photos(product_id: UUID):
 
 
 @product.post("/{product_id}/upload-photo")
-async def upload_photo(product_id: UUID, file: UploadFile):
-    resp = await ProductService.upload_photo(product_id=product_id, file=file)
+async def upload_photo(product_id: UUID, file: UploadFile, current_user: User = Depends(get_current_user)):
+    resp = await ProductService.upload_photo(product_id=product_id, file=file, actor=current_user)
     return JSONResponse(status_code=200, content=resp.model_dump())

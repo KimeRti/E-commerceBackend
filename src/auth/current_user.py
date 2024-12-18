@@ -9,7 +9,6 @@ from pydantic import ValidationError
 
 
 async def get_current_user(
-        request: Request,
         Authorization: str = Cookie(None),
         authorization: str = Header(None, alias="Authorization")
 ) -> User:

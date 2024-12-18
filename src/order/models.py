@@ -41,6 +41,7 @@ class OrderItem(Base):
     product_id: Mapped[UUID] = mapped_column(ForeignKey("products.id"), nullable=False)
     quantity: Mapped[int] = mapped_column(nullable=False)
     price: Mapped[float] = mapped_column(nullable=False)
+    title: Mapped[str] = mapped_column(nullable=False)
 
     order: Mapped["Order"] = relationship("Order", back_populates="items")
     product: Mapped["Product"] = relationship("Product")

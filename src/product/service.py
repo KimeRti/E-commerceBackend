@@ -99,7 +99,8 @@ class ProductService:
         return GeneralResponse(status=200, message="Ürün Silindi")
 
     @staticmethod
-    async def upload_photo(product_id: UUID, file: UploadFile):
+    async def upload_photo(product_id: UUID, file: UploadFile, actor: User):
+        need_role(actor, [UserRole.ADMIN])
         file_path = UPLOAD_DIR / f"{product_id}_{file.filename}"
         with file_path.open("wb") as buffer:
             shutil.copyfileobj(file.file, buffer)

@@ -26,6 +26,8 @@ class CartCreate(BaseModel):
 class CartItemView(BaseModel, UUIDView):
     product_id: Union[UUID, str]
     quantity: int
+    price: float
+    title: str
 
     class Config:
         orm_mode = True
@@ -36,6 +38,7 @@ class CartView(BaseModel, UUIDView):
     user_id: Optional[Union[UUID, str]] = None
     session_token: Optional[str] = None
     items: List[CartItemView] = []
+    total_price: float
 
     class Config:
         orm_mode = True

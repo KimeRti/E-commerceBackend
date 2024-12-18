@@ -28,6 +28,14 @@ class OrderCreate(BaseModel):
         from_attributes = True
 
 
+class OrderItemView(BaseModel):
+    id: str
+    product_id: str
+    quantity: int
+    price: float
+    title: str
+
+
 class OrderView(BaseModel, UUIDView):
     user_id: Optional[Union[UUID, str]] = None
     session_token: Optional[str] = None
@@ -35,7 +43,14 @@ class OrderView(BaseModel, UUIDView):
     address: str
     total_amount: float
     status: OrderStatus
-    items: List[CartItemView]
+    items: List[OrderItemView]
+
+    class Config:
+        from_attributes = True
+
+
+class UpdateOrderStatus(BaseModel):
+    status: OrderStatus
 
     class Config:
         from_attributes = True

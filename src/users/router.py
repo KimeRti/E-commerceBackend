@@ -1,7 +1,7 @@
 from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Request, Header
+from fastapi import APIRouter, Depends, Request, Header, Cookie
 from fastapi.responses import JSONResponse
 
 from src.auth.current_user import get_current_user
@@ -25,22 +25,16 @@ async def create_user(user: UserCreate, current_user: User = Depends(get_current
 
 
 @user.post("/address")
-async def create_address(request: Request, address: AddressCreate, current_user: Optional[User] = Depends(get_current_user), session_token: Optional[str] = Header(None)):
-    if current_user is None:
-        try:
-            current_user = await get_current_user(request=request)
-        except Exception:
-            current_user = None
-
-    if not current_user and not session_token:
-        raise BadRequestError("Kullanıcı bilgisi bulunamadı !")
+async def create_address(address: AddressCreate, current_user: Optional[User] = Depends(get_current_user), session_token: Optional[str] = Cookie(None)):
+    if current_user is None and session_token is None:
+        raise BadRequestError("Kullanıcı bilgisi bulunamadı!")
 
     resp = await UserService.create_address(address=address, actor=current_user, session_token=session_token)
     return JSONResponse(status_code=resp.status, content=resp.model_dump())
 
 
 @user.get("/addresses")
-async def get_addresses(request: Request, current_user: Optional[User] = Depends(get_current_user), session_token: Optional[str] = Header(None)):
+async def get_addresses(request: Request, current_user: Optional[User] = Depends(get_current_user), session_token: Optional[str] = Cookie(None)):
     if current_user is None:
         try:
             current_user = await get_current_user(request=request)

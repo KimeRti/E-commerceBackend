@@ -11,6 +11,7 @@ class Cart(Base):
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), nullable=True)
     session_token: Mapped[str] = mapped_column(unique=True, nullable=True)
+    total_price: Mapped[float] = mapped_column(default=0.0)
 
     items: Mapped[list["CartItem"]] = relationship("CartItem", back_populates="cart", cascade="all, delete-orphan")
     user: Mapped["User"] = relationship("User", back_populates="cart")
@@ -23,6 +24,8 @@ class CartItem(Base):
     cart_id: Mapped[UUID] = mapped_column(ForeignKey("cart.id"), nullable=True)
     product_id: Mapped[UUID] = mapped_column(ForeignKey("products.id"), nullable=False)
     quantity: Mapped[int] = mapped_column(nullable=False)
+    price: Mapped[float] = mapped_column(nullable=False)
+    title: Mapped[str] = mapped_column(nullable=False)
 
     cart: Mapped["Cart"] = relationship("Cart", back_populates="items")
     product: Mapped["Product"] = relationship("Product")

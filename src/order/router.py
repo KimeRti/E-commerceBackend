@@ -1,13 +1,14 @@
 from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, status, Depends, Header, Request
+from fastapi import APIRouter, HTTPException, status, Depends, Header, Request, Cookie
 from starlette.responses import JSONResponse
 
 from src.auth.current_user import get_current_user
 from src.order.service import OrderService
 from src.users.models import User
 from src.utils.exceptions import BadRequestError
+from src.utils.schemas import PaginationGet
 
 order = APIRouter(
     prefix="/order",
@@ -17,7 +18,7 @@ order = APIRouter(
 
 
 @order.post("")
-async def create_order(request: Request, current_user: Optional[User] = Depends(get_current_user), session_token: Optional[str] = Header(None)):
+async def create_order(request: Request, current_user: Optional[User] = Depends(get_current_user), session_token: Optional[str] = Cookie(None)):
     if current_user is None:
         try:
             current_user = await get_current_user(request=request)
@@ -43,6 +44,12 @@ async def get_anonymous_orders(current_user: Optional[User] = Depends(get_curren
     return JSONResponse(status_code=resp.status, content=resp.model_dump())
 
 
+@order.get("/cancelled")
+async def get_cancelled_orders(current_user: Optional[User] = Depends(get_current_user)):
+    resp = await OrderService.get_cancelled_orders(current_user)
+    return JSONResponse(status_code=resp.status, content=resp.model_dump())
+
+
 @order.get("/{order_id}")
 async def get_order_detail(
     order_id: UUID,
@@ -50,5 +57,12 @@ async def get_order_detail(
 ):
     resp = await OrderService.get_order_detail(order_id, current_user)
     return JSONResponse(status_code=resp.status, content=resp.model_dump())
+
+
+@order.delete("/{order_id}")
+async def cancel_order(order_id: UUID, reason: Optional[str] = None, current_user: Optional[User] = Depends(get_current_user), session_token: Optional[str] = Cookie(None)):
+    resp = await OrderService.cancel_order(order_id, current_user, session_token, reason)
+    return JSONResponse(status_code=resp.status, content=resp.model_dump())
+
 
 
